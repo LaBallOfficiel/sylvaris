@@ -1,143 +1,280 @@
-// URL de ton serveur
-const API_URL = "https://sylvaris.onrender.com";
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
-// -------------------- LOGIN --------------------
-async function login() {
-    const username = document.getElementById("pseudo").value;
-    const password = document.getElementById("password").value; // si tu as un champ password
+const app = express();
+const PORT = 3000;
 
+app.use(cors({ origin: '*' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = './uploads';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+        cb(null, uniqueName);
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Seules les images sont autorisées'));
+        }
+    }
+});
+
+const DB_FILE = './db.json';
+
+function readDB() {
+    if (!fs.existsSync(DB_FILE)) {
+        const initialData = { users: {}, kingdoms: {} };
+        fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
+        return initialData;
+    }
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+}
+
+function writeDB(data) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
+
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Routes
+app.get('/api/check-user/:username', (req, res) => {
+    const username = req.params.username;
+    const db = readDB();
+    
+    if (db.users[username]) {
+        res.json({ exists: true, hasPassword: !!db.users[username].password });
+    } else {
+        res.json({ exists: false, hasPassword: false });
+    }
+});
+
+app.post('/api/set-password', (req, res) => {
+    const { username, password } = req.body;
+    
     if (!username || !password) {
-        alert("Pseudo et mot de passe requis");
-        return;
+        return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     }
-
-    try {
-        const res = await fetch(`${API_URL}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-            document.getElementById("login").style.display = "none";
-            document.getElementById("app").style.display = "block";
-            console.log(`Connecté en tant que ${data.user}`);
-        } else {
-            alert(data.error || "Accès refusé");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Erreur serveur, réessayez plus tard");
+    
+    const db = readDB();
+    
+    if (!db.users[username]) {
+        db.users[username] = {};
     }
-}
+    
+    db.users[username].password = hashPassword(password);
+    db.users[username].createdAt = new Date().toISOString();
+    
+    writeDB(db);
+    res.json({ success: true });
+});
 
-// -------------------- CRÉER ROYAUME --------------------
-async function createKingdom() {
-    const name = document.getElementById("kingdomName").value;
-    const king = document.getElementById("kingName").value;
-    const currency = document.getElementById("currency").value;
-    const user = document.getElementById("pseudo").value;
-    const logoFile = document.getElementById("logo").files[0];
-
-    if (!name || !king || !currency || !user || !logoFile) {
-        alert("Tous les champs sont requis !");
-        return;
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     }
-
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("king", king);
-    formData.append("currency", currency);
-    formData.append("user", user);
-    formData.append("logo", logoFile);
-
-    try {
-        const res = await fetch(`${API_URL}/api/kingdom`, {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert("Royaume créé !");
-            console.log(data.kingdom);
-        } else {
-            alert(data.error || "Impossible de créer le royaume");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Erreur serveur, réessayez plus tard");
+    
+    const db = readDB();
+    const user = db.users[username];
+    
+    if (!user || user.password !== hashPassword(password)) {
+        return res.status(401).json({ error: 'Mot de passe incorrect' });
     }
-}
+    
+    res.json({ success: true, user: username });
+});
 
-// -------------------- LISTER ROYAUMES --------------------
-async function listKingdoms() {
-    try {
-        const res = await fetch(`${API_URL}/api/kingdoms`);
-        const kingdoms = await res.json();
-
-        const container = document.getElementById("kingdomList");
-        container.innerHTML = "";
-
-        kingdoms.forEach(k => {
-            const div = document.createElement("div");
-            div.innerHTML = `
-                <h3>${k.name} (${k.king})</h3>
-                <img src="${k.logo}" width="100">
-                <p>Devise: ${k.currency}</p>
-                <p>Loi: ${k.laws || "Aucune"}</p>
-            `;
-            container.appendChild(div);
-        });
-    } catch (err) {
-        console.error(err);
+app.post('/api/kingdom', upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), (req, res) => {
+    const { name, king, currency, user } = req.body;
+    
+    if (!name || !king || !currency || !user) {
+        return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
-}
-
-// -------------------- AJOUTER RÉSIDENT --------------------
-async function addResident(user) {
-    const resident = prompt("Nom du résident à ajouter :");
-    if (!resident) return;
-
-    try {
-        const res = await fetch(`${API_URL}/api/kingdom/${user}/residents`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ resident })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert("Résident ajouté !");
-            console.log(data.residents);
-        } else {
-            alert(data.error || "Erreur ajout résident");
-        }
-    } catch (err) {
-        console.error(err);
+    
+    if (!req.files || !req.files.logo || !req.files.banner) {
+        return res.status(400).json({ error: 'Logo et bannière requis' });
     }
-}
-
-// -------------------- MODIFIER LOIS --------------------
-async function updateLaws(user) {
-    const laws = prompt("Nouvelle loi :");
-    if (!laws) return;
-
-    try {
-        const res = await fetch(`${API_URL}/api/kingdom/${user}/laws`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ laws })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert("Loi mise à jour !");
-            console.log(data.laws);
-        } else {
-            alert(data.error || "Erreur mise à jour lois");
-        }
-    } catch (err) {
-        console.error(err);
+    
+    const db = readDB();
+    
+    if (db.kingdoms[user]) {
+        return res.status(400).json({ error: 'Vous avez déjà un royaume' });
     }
-}
+    
+    const logoUrl = `/uploads/${req.files.logo[0].filename}`;
+    const bannerUrl = `/uploads/${req.files.banner[0].filename}`;
+    
+    db.kingdoms[user] = {
+        name,
+        king,
+        currency,
+        logo: `http://localhost:${PORT}${logoUrl}`,
+        banner: `http://localhost:${PORT}${bannerUrl}`,
+        residents: [],
+        laws: '',
+        createdAt: new Date().toISOString(),
+        owner: user
+    };
+    
+    writeDB(db);
+    res.json({ success: true, kingdom: db.kingdoms[user] });
+});
+
+// Modifier un royaume
+app.put('/api/kingdom/:user', upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), (req, res) => {
+    const user = req.params.user;
+    const { name, king, currency } = req.body;
+    
+    const db = readDB();
+    const kingdom = db.kingdoms[user];
+    
+    if (!kingdom) {
+        return res.status(404).json({ error: 'Royaume non trouvé' });
+    }
+    
+    // Mettre à jour les informations
+    if (name) kingdom.name = name;
+    if (king) kingdom.king = king;
+    if (currency) kingdom.currency = currency;
+    
+    // Mettre à jour le logo si fourni
+    if (req.files && req.files.logo) {
+        const logoUrl = `/uploads/${req.files.logo[0].filename}`;
+        kingdom.logo = `http://localhost:${PORT}${logoUrl}`;
+    }
+    
+    // Mettre à jour la bannière si fournie
+    if (req.files && req.files.banner) {
+        const bannerUrl = `/uploads/${req.files.banner[0].filename}`;
+        kingdom.banner = `http://localhost:${PORT}${bannerUrl}`;
+    }
+    
+    writeDB(db);
+    res.json({ success: true, kingdom });
+});
+
+// Supprimer un royaume
+app.delete('/api/kingdom/:user', (req, res) => {
+    const user = req.params.user;
+    const db = readDB();
+    
+    if (!db.kingdoms[user]) {
+        return res.status(404).json({ error: 'Royaume non trouvé' });
+    }
+    
+    // Supprimer le royaume
+    delete db.kingdoms[user];
+    writeDB(db);
+    
+    res.json({ success: true, message: 'Royaume supprimé avec succès' });
+});
+
+app.get('/api/kingdoms', (req, res) => {
+    const db = readDB();
+    const kingdoms = Object.values(db.kingdoms);
+    res.json(kingdoms);
+});
+
+app.get('/api/kingdom/:user', (req, res) => {
+    const user = req.params.user;
+    const db = readDB();
+    
+    const kingdom = db.kingdoms[user];
+    
+    if (!kingdom) {
+        return res.status(404).json({ error: 'Aucun royaume trouvé' });
+    }
+    
+    res.json(kingdom);
+});
+
+app.post('/api/kingdom/:user/residents', (req, res) => {
+    const user = req.params.user;
+    const { resident } = req.body;
+    
+    if (!resident) {
+        return res.status(400).json({ error: 'Nom du résident requis' });
+    }
+    
+    const db = readDB();
+    const kingdom = db.kingdoms[user];
+    
+    if (!kingdom) {
+        return res.status(404).json({ error: 'Royaume non trouvé' });
+    }
+    
+    if (!kingdom.residents.includes(resident)) {
+        kingdom.residents.push(resident);
+        writeDB(db);
+    }
+    
+    res.json({ success: true, residents: kingdom.residents });
+});
+
+// Supprimer un résident
+app.delete('/api/kingdom/:user/residents/:resident', (req, res) => {
+    const user = req.params.user;
+    const resident = req.params.resident;
+    
+    const db = readDB();
+    const kingdom = db.kingdoms[user];
+    
+    if (!kingdom) {
+        return res.status(404).json({ error: 'Royaume non trouvé' });
+    }
+    
+    kingdom.residents = kingdom.residents.filter(r => r !== resident);
+    writeDB(db);
+    
+    res.json({ success: true, residents: kingdom.residents });
+});
+
+app.put('/api/kingdom/:user/laws', (req, res) => {
+    const user = req.params.user;
+    const { laws } = req.body;
+    
+    const db = readDB();
+    const kingdom = db.kingdoms[user];
+    
+    if (!kingdom) {
+        return res.status(404).json({ error: 'Royaume non trouvé' });
+    }
+    
+    kingdom.laws = laws;
+    writeDB(db);
+    
+    res.json({ success: true, laws: kingdom.laws });
+});
+
+app.listen(PORT, () => {
+    console.log(`🟣 Serveur Sylvaris lancé sur http://localhost:${PORT}`);
+    console.log(`📁 Base de données: ${DB_FILE}`);
+    console.log(`📸 Uploads: ./uploads/`);
+});
