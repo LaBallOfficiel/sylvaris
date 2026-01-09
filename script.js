@@ -1,6 +1,6 @@
 // Liste des pseudos autorisés
 const AUTHORIZED_USERS = [
-    'LaVraisBall', 
+    'LaVraiBall', 
     'LaVraiBall2', 
     'Lulu Rose2208', 
     'LyricTitan92747', 
