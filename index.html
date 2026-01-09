@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sylvaris - Saison 2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Écran de connexion -->
+    <div id="login-screen">
+        <div class="login-container pixel-border">
+            <h1 class="login-title">SYLVARIS - SAISON 2</h1>
+            <div class="input-group">
+                <label>Pseudo Minecraft Bedrock</label>
+                <input type="text" id="username" placeholder="Entre ton pseudo..." autocomplete="off">
+            </div>
+            <button class="btn pixel-border" onclick="login()">Se connecter</button>
+            <div class="error-message" id="error-message">Accès refusé. Pseudo non autorisé.</div>
+        </div>
+    </div>
+
+    <!-- Application principale -->
+    <div id="main-app">
+        <div class="header">
+            <img src="logoS.png" alt="Logo Sylvaris" class="logo" id="server-logo">
+            <div class="user-info">Connecté en tant que <span id="current-user"></span></div>
+        </div>
+
+        <div class="container">
+            <div class="sidebar">
+                <div class="menu-item active" data-section="accueil">Accueil</div>
+                <div class="menu-item" data-section="regle">Règle</div>
+                <div class="menu-item" data-section="creer-royaume">Créer un royaume</div>
+            </div>
+
+            <div class="content">
+                <!-- Section Accueil -->
+                <div class="content-section active" id="accueil">
+                    <div class="welcome-box pixel-border">
+                        <h2>🌍 Serveur Minecraft Bedrock RP – Realms</h2>
+                        <p>Rejoins un serveur RolePlay unique où tu peux créer ou rejoindre un royaume, bâtir ton territoire, écrire ton lore et interagir avec les autres joueurs par la diplomatie, le commerce ou la guerre.</p>
+                        <p>Chaque bannière représente un royaume, chaque décision a des conséquences. Un monde vivant, libre, stratégique et entièrement façonné par les joueurs.</p>
+                        <p><strong>👉 Ton royaume. Ton histoire. Ton monde.</strong></p>
+                    </div>
+                </div>
+
+                <!-- Section Règle -->
+                <div class="content-section" id="regle">
+                    <div class="welcome-box pixel-border">
+                        <h2>📜 Règlement Officiel du Serveur</h2>
+                    </div>
+
+                    <div class="rules-container">
+                        <!-- Règle 1 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(1)">
+                                <span>1. 🤝 Règles Générales de Conduite</span>
+                                <span class="arrow" id="arrow-1">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-1">
+                                <ul>
+                                    <li>Le respect entre les joueurs est obligatoire. Aucun propos discriminatoire, insultant ou provocateur ne sera toléré.</li>
+                                    <li>Le harcèlement, les menaces ou comportements toxiques sont strictement interdits.</li>
+                                    <li>L'usage de cheats, mods non autorisés, ou toute forme de triche est interdit.</li>
+                                    <li>Respectez toujours les décisions de l'administration et des modérateurs.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 2 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(2)">
+                                <span>2. 👑 Royaumes et Bannières</span>
+                                <span class="arrow" id="arrow-2">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-2">
+                                <p><strong>Pour créer un royaume, vous devez :</strong></p>
+                                <ul>
+                                    <li>Créer un emblème unique sur une bannière.</li>
+                                    <li>Enregistrer votre royaume et son emblème sur le serveur Discord.</li>
+                                </ul>
+                                <p><strong>Règles des bannières :</strong></p>
+                                <ul>
+                                    <li>Tout bâtiment arborant l'emblème d'un royaume est considéré comme appartenant à ce royaume.</li>
+                                    <li>Un bâtiment sans emblème peut être conquis en y posant une bannière visible de votre royaume.</li>
+                                    <li>⚠️ Un bâtiment sans aucune bannière est considéré comme abandonné : il n'appartient à personne et peut être détruit, modifié ou réutilisé librement.</li>
+                                    <li>Un bâtiment peut appartenir à plusieurs royaumes si plusieurs bannières sont présentes (partage officiel).</li>
+                                </ul>
+                                <p><strong>Frontières :</strong></p>
+                                <ul>
+                                    <li>Les royaumes peuvent définir des frontières par pose de blocs (max 4 cartes en jeu), qui doivent contenir la bannière du royaume.</li>
+                                    <li>Seul le royaume propriétaire de la frontière peut construire à l'intérieur, sauf accord.</li>
+                                    <li>Les bâtiments à l'intérieur de la frontière n'ont pas besoin d'arborer une bannière, sauf s'ils appartiennent à un autre royaume.</li>
+                                </ul>
+                                <p><strong>Destruction de bannières :</strong></p>
+                                <ul>
+                                    <li>Les bannières ne peuvent être détruites qu'en cas de guerre officielle, lors d'une vente, ou par décision du chef du royaume.</li>
+                                </ul>
+                                <p><strong>Zones libres :</strong></p>
+                                <ul>
+                                    <li>Les zones hors royaumes et spawn sont libres : pvp, TNT, et construction/déconstruction sont soumis uniquement aux règles générales du serveur.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 3 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(3)">
+                                <span>3. ⚔️ War Zone (zones hors royaumes & hors spawn)</span>
+                                <span class="arrow" id="arrow-3">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-3">
+                                <ul>
+                                    <li>La War Zone correspond à toute zone située en dehors des frontières officielles des royaumes et du spawn.</li>
+                                    <li>Dans cette zone, TNT, constructions, destructions, pillages et PvP sont libres, tant que les règles générales du serveur (respect, anti-triche, etc.) sont respectées.</li>
+                                </ul>
+                                <p><strong>Système de combat :</strong></p>
+                                <ul>
+                                    <li>Dès qu'un joueur inflige un coup à un autre en War Zone, les deux entrent en état de combat.</li>
+                                    <li>Pendant cet état, toute forme de téléportation (home, warp, /tpa…) est interdite.</li>
+                                    <li>Le combat se termine si aucun coup n'est porté durant 10 minutes ou si l'un des deux joueurs meurt.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 4 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(4)">
+                                <span>4. 📖 Lore & Rôleplay des Royaumes</span>
+                                <span class="arrow" id="arrow-4">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-4">
+                                <ul>
+                                    <li>Chaque royaume peut développer son histoire, ses valeurs, et son style architectural.</li>
+                                    <li>Un canal Discord dédié pourra présenter chaque royaume.</li>
+                                    <li>Les récits RP (guerres, légendes, coutumes) sont encouragés.</li>
+                                    <li>Les joueurs doivent incarner leur rôle de manière cohérente : parole, tenue, comportement et constructions.</li>
+                                    <li>Des événements RP (festivals, élections, alliances, cérémonies…) peuvent être organisés librement ou avec l'accord du staff.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 5 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(5)">
+                                <span>5. 💱 Économie & Monnaies</span>
+                                <span class="arrow" id="arrow-5">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-5">
+                                <ul>
+                                    <li>Chaque royaume peut choisir sa monnaie officielle parmi les ressources du jeu (or, fer, pyronite, orsteel, etc.).</li>
+                                    <li>Les royaumes peuvent établir des taux de conversion et signer des traités commerciaux.</li>
+                                    <li>Les marchands et guildes peuvent commercer librement hors royaumes.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 6 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(6)">
+                                <span>6. 🏴 Pillage et Règles de Bases</span>
+                                <span class="arrow" id="arrow-6">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-6">
+                                <p><strong>Le pillage est autorisé mais encadré :</strong></p>
+                                <ul>
+                                    <li>Interdiction formelle de casser, brûler ou faire exploser des blocs (TNT, feu, etc.) sur le pillage dans une zone de royaume.</li>
+                                    <li>Le pillage doit se faire par un passage prévu ou une faille existante (porte non verrouillée).</li>
+                                    <li>Tout bloc cassé accidentellement doit être remis en place immédiatement.</li>
+                                    <li>Chaque base doit disposer d'un accès clairement identifiable vers toutes ces zones.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 7 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(7)">
+                                <span>7. ⚔️ Guerre entre Royaumes</span>
+                                <span class="arrow" id="arrow-7">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-7">
+                                <p><strong>Déclaration de guerre :</strong></p>
+                                <ul>
+                                    <li>La guerre doit être déclarée officiellement sur Discord avec : le nom du royaume ciblé, la raison du conflit, et la récompense promise en cas de victoire.</li>
+                                </ul>
+                                <p><strong>Déroulement :</strong></p>
+                                <ul>
+                                    <li>Validée par l'administration, la guerre se déroule en plusieurs phases.</li>
+                                    <li>Un quota de points, fixé par le staff, détermine la victoire.</li>
+                                    <li>La guerre s'arrête dès qu'un camp atteint ce quota, même si toutes les phases ne sont pas terminées.</li>
+                                </ul>
+                                <p><strong>Phases :</strong></p>
+                                <ul>
+                                    <li><strong>Phase 1 :</strong> 🗡️ PvP (combat entre joueurs, aucune destruction)</li>
+                                    <li><strong>Phase 2 :</strong> 🧱 Ressources & Technologie (évaluation richesse et tech)</li>
+                                    <li><strong>Phase 3 :</strong> 💣 Bombardement (explosifs autorisés, destruction possible sur bâtiments ennemis avec bannière)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 8 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(8)">
+                                <span>8. 💾 Sauvegardes & Backups</span>
+                                <span class="arrow" id="arrow-8">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-8">
+                                <ul>
+                                    <li>Les admins réalisent régulièrement des sauvegardes pour garantir la sécurité des données.</li>
+                                    <li>Certains griefs peuvent être annulés ou réparés selon la gravité et les preuves.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 9 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(9)">
+                                <span>9. 👥 Comptes secondaires (Multicompte)</span>
+                                <span class="arrow" id="arrow-9">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-9">
+                                <ul>
+                                    <li>Un seul compte principal par joueur est autorisé.</li>
+                                    <li>Les comptes secondaires doivent être déclarés à l'administration.</li>
+                                    <li>L'usage des comptes secondaires pour tricher (espionnage, multi-farming, évasion sanctions) est interdit.</li>
+                                    <li>Tous les comptes doivent respecter le règlement.</li>
+                                    <li>Les sanctions s'appliquent également aux comptes secondaires et peuvent toucher le principal.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Règle 10 -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(10)">
+                                <span>10. ❗ Règles additionnelles</span>
+                                <span class="arrow" id="arrow-10">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-10">
+                                <ul>
+                                    <li>Il est interdit de poser des coffres isolés, non intégrés à un bâtiment ou campement.</li>
+                                    <li>Être AFK plus de 15 minutes est interdit.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Sanctions -->
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(11)">
+                                <span>🛡️ Sanctions & Modération</span>
+                                <span class="arrow" id="arrow-11">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-11">
+                                <ul>
+                                    <li>Tout non-respect du règlement peut entraîner : avertissements, bannissements temporaires ou permanents selon la gravité.</li>
+                                    <li>Pour toute question, contactez le staff via Discord.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Créer un royaume -->
+                <div class="content-section" id="creer-royaume">
+                    <div class="form-box pixel-border">
+                        <h3>Créer un nouveau royaume</h3>
+                        <form id="kingdom-form" onsubmit="createKingdom(event)">
+                            <div class="form-field">
+                                <label>Nom du royaume</label>
+                                <input type="text" id="kingdom-name" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Pseudo du roi</label>
+                                <input type="text" id="king-name" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Logo du royaume</label>
+                                <input type="file" id="kingdom-logo" accept="image/*" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Type de monnaie</label>
+                                <select id="currency-type" required>
+                                    <option value="">Sélectionne une monnaie</option>
+                                    <option value="emeraude">Émeraude</option>
+                                    <option value="diamant">Diamant</option>
+                                    <option value="or">Or</option>
+                                    <option value="netherite">Netherite</option>
+                                    <option value="custom">Personnalisée</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn pixel-border">Créer le royaume</button>
+                            <div class="success-message" id="create-success">Royaume créé avec succès!</div>
+                        </form>
+                    </div>
+
+                    <!-- Gestion du royaume (visible après création) -->
+                    <div id="kingdom-management" style="display: none;">
+                        <div class="kingdom-info pixel-border">
+                            <div class="kingdom-header">
+                                <img id="display-logo" class="kingdom-logo" src="" alt="Logo">
+                                <div class="kingdom-title">
+                                    <h2 id="display-kingdom-name"></h2>
+                                    <p>Roi: <span id="display-king-name"></span> | Monnaie: <span id="display-currency"></span></p>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label>Résidents du royaume</label>
+                                <ul class="residents-list" id="residents-list"></ul>
+                                <div class="add-resident-form">
+                                    <input type="text" id="new-resident" placeholder="Pseudo du résident...">
+                                    <button class="btn-small pixel-border" onclick="addResident()">Ajouter</button>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label>Lois du royaume</label>
+                                <textarea id="kingdom-laws" placeholder="Écris les lois de ton royaume..."></textarea>
+                                <button class="btn-small pixel-border" onclick="saveLaws()" style="margin-top: 10px;">Sauvegarder les lois</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="logout-btn pixel-border" onclick="logout()">Déconnexion</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
