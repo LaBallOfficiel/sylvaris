@@ -549,3 +549,86 @@ body {
     color: #a78bfa;
     font-size: 11px;
 }
+
+.login-title {
+    font-size: 24px;
+    color: #c4b5fd;
+    margin-bottom: 30px;
+    text-shadow: 3px 3px 0 #4a2c6e;
+    white-space: nowrap; /* Empêche le retour à la ligne */
+}           
+.login-title {
+    font-size: 20px; /* Réduire légèrement la taille */
+    color: #c4b5fd;
+    margin-bottom: 30px;
+    text-shadow: 3px 3px 0 #4a2c6e;
+    white-space: nowrap;
+}
+
+/* Version mobile */
+@media (max-width: 500px) {
+    .login-title {
+        font-size: 16px;
+    }
+}
+/* Mode édition */
+#edit-mode {
+    background: rgba(30, 0, 60, 0.6);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #8b5cf6;
+}
+
+.kingdom-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #7c3aed;
+    position: relative;
+}
+
+.kingdom-header .btn-small {
+    margin-left: auto;
+}
+
+.residents-list li {
+    padding: 10px;
+    background: rgba(30, 0, 60, 0.6);
+    margin-bottom: 8px;
+    border-left: 3px solid #7c3aed;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.remove-resident-btn {
+    background: #dc2626;
+    border: 2px solid #ef4444;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 9px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.remove-resident-btn:hover {
+    background: #ef4444;
+}
+
+.add-resident-form select {
+    flex: 1;
+    padding: 12px;
+    background: rgba(30, 0, 60, 0.8);
+    border: 2px solid #7c3aed;
+    color: #e0d4ff;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.add-resident-form select:focus {
+    border-color: #a78bfa;
+}

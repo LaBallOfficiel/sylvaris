@@ -323,13 +323,44 @@
                                     <h2 id="display-kingdom-name"></h2>
                                     <p>Roi: <span id="display-king-name"></span> | Monnaie: <span id="display-currency"></span></p>
                                 </div>
+                                <button class="btn-small pixel-border" onclick="toggleEditMode()">✏️ Modifier</button>
                             </div>
 
-                            <div class="form-field">
+                            <!-- Mode édition -->
+                            <div id="edit-mode" style="display: none;">
+                                <div class="form-field">
+                                    <label>Nom du royaume</label>
+                                    <input type="text" id="edit-kingdom-name">
+                                </div>
+                                <div class="form-field">
+                                    <label>Pseudo du roi</label>
+                                    <input type="text" id="edit-king-name">
+                                </div>
+                                <div class="form-field">
+                                    <label>Nouveau logo (optionnel)</label>
+                                    <input type="file" id="edit-kingdom-logo" accept="image/*">
+                                </div>
+                                <div class="form-field">
+                                    <label>Type de monnaie</label>
+                                    <select id="edit-currency-type">
+                                        <option value="emeraude">Émeraude</option>
+                                        <option value="diamant">Diamant</option>
+                                        <option value="or">Or</option>
+                                        <option value="netherite">Netherite</option>
+                                        <option value="custom">Personnalisée</option>
+                                    </select>
+                                </div>
+                                <button class="btn-small pixel-border" onclick="saveKingdomEdits()">💾 Enregistrer</button>
+                                <button class="btn-small pixel-border" onclick="toggleEditMode()" style="background: #dc2626; border-color: #ef4444;">❌ Annuler</button>
+                            </div>
+
+                            <div class="form-field" style="margin-top: 30px;">
                                 <label>Résidents du royaume</label>
                                 <ul class="residents-list" id="residents-list"></ul>
                                 <div class="add-resident-form">
-                                    <input type="text" id="new-resident" placeholder="Pseudo du résident...">
+                                    <select id="new-resident">
+                                        <option value="">Sélectionne un joueur...</option>
+                                    </select>
                                     <button class="btn-small pixel-border" onclick="addResident()">Ajouter</button>
                                 </div>
                             </div>

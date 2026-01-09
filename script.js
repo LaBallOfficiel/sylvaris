@@ -1,6 +1,6 @@
 // Liste des pseudos autorisés
 const AUTHORIZED_USERS = [
-    'LaVraiBall', 
+    'LaVraiBall',
     'LaVraiBall2', 
     'Lulu Rose2208', 
     'LyricTitan92747', 
@@ -13,7 +13,8 @@ const AUTHORIZED_USERS = [
 const API_URL = 'http://localhost:3000/api';
 let currentUser = null;
 let currentKingdom = null;
-let loginStep = 'username'; // 'username', 'password', 'new-password'
+let loginStep = 'username';
+let editMode = false;
 
 // Navigation menu
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,14 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = item.getAttribute('data-section');
             document.getElementById(section).classList.add('active');
             
-            // Charger les royaumes si on va sur la page royaumes
             if (section === 'royaumes') {
                 loadAllKingdoms();
             }
         });
     });
 
-    // Entrée pour se connecter
     document.getElementById('username').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') login();
     });
@@ -45,7 +44,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('confirm-password').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') login();
     });
+
+    // Remplir le select des résidents avec les joueurs autorisés
+    populateResidentSelect();
 });
+
+// Remplir la liste déroulante des résidents
+function populateResidentSelect() {
+    const select = document.getElementById('new-resident');
+    select.innerHTML = '<option value="">Sélectionne un joueur...</option>';
+    
+    AUTHORIZED_USERS.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user;
+        option.textContent = user;
+        select.appendChild(option);
+    });
+}
 
 // Connexion avec gestion du mot de passe
 async function login() {
@@ -62,7 +77,6 @@ async function login() {
             return;
         }
 
-        // Vérification côté client
         if (!AUTHORIZED_USERS.includes(username)) {
             errorMsg.textContent = 'Accès refusé. Pseudo non autorisé.';
             errorMsg.style.display = 'block';
@@ -70,25 +84,21 @@ async function login() {
         }
 
         try {
-            // Vérifier si l'utilisateur existe
             const response = await fetch(`${API_URL}/check-user/${username}`);
             const data = await response.json();
 
             if (data.exists) {
                 if (data.hasPassword) {
-                    // Demander le mot de passe
                     loginStep = 'password';
                     document.getElementById('password-group').style.display = 'block';
                     errorMsg.style.display = 'none';
                 } else {
-                    // Première connexion, créer un mot de passe
                     loginStep = 'new-password';
                     document.getElementById('new-password-group').style.display = 'block';
                     document.getElementById('confirm-password-group').style.display = 'block';
                     errorMsg.style.display = 'none';
                 }
             } else {
-                // Nouvel utilisateur
                 loginStep = 'new-password';
                 document.getElementById('new-password-group').style.display = 'block';
                 document.getElementById('confirm-password-group').style.display = 'block';
@@ -99,7 +109,6 @@ async function login() {
             errorMsg.style.display = 'block';
         }
     } else if (loginStep === 'password') {
-        // Connexion avec mot de passe existant
         if (!password) {
             errorMsg.textContent = 'Veuillez entrer votre mot de passe.';
             errorMsg.style.display = 'block';
@@ -130,7 +139,6 @@ async function login() {
             errorMsg.style.display = 'block';
         }
     } else if (loginStep === 'new-password') {
-        // Création d'un nouveau mot de passe
         if (!newPassword || !confirmPassword) {
             errorMsg.textContent = 'Veuillez remplir tous les champs.';
             errorMsg.style.display = 'block';
@@ -203,6 +211,51 @@ async function createKingdom(event) {
             }, 2000);
         } else {
             alert(data.error || 'Erreur lors de la création du royaume');
+        }
+    } catch (error) {
+        alert('Erreur de connexion au serveur');
+    }
+}
+
+// Toggle mode édition
+function toggleEditMode() {
+    editMode = !editMode;
+    const editSection = document.getElementById('edit-mode');
+    
+    if (editMode) {
+        editSection.style.display = 'block';
+        document.getElementById('edit-kingdom-name').value = currentKingdom.name;
+        document.getElementById('edit-king-name').value = currentKingdom.king;
+        document.getElementById('edit-currency-type').value = currentKingdom.currency;
+    } else {
+        editSection.style.display = 'none';
+    }
+}
+
+// Sauvegarder les modifications du royaume
+async function saveKingdomEdits() {
+    const formData = new FormData();
+    formData.append('name', document.getElementById('edit-kingdom-name').value);
+    formData.append('king', document.getElementById('edit-king-name').value);
+    formData.append('currency', document.getElementById('edit-currency-type').value);
+    
+    const logoFile = document.getElementById('edit-kingdom-logo').files[0];
+    if (logoFile) {
+        formData.append('logo', logoFile);
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/kingdom/${currentUser}`, {
+            method: 'PUT',
+            body: formData
+        });
+
+        if (response.ok) {
+            alert('Royaume modifié avec succès!');
+            toggleEditMode();
+            loadKingdom();
+        } else {
+            alert('Erreur lors de la modification du royaume');
         }
     } catch (error) {
         alert('Erreur de connexion au serveur');
@@ -303,15 +356,40 @@ function displayKingdom(kingdom) {
     residentsList.innerHTML = '';
     kingdom.residents.forEach(resident => {
         const li = document.createElement('li');
-        li.textContent = resident;
+        li.innerHTML = `
+            <span>${resident}</span>
+            <button class="remove-resident-btn" onclick="removeResident('${resident}')">🗑️ Supprimer</button>
+        `;
         residentsList.appendChild(li);
+    });
+
+    // Mettre à jour la liste déroulante pour exclure les résidents déjà ajoutés
+    updateResidentSelect();
+}
+
+// Mettre à jour la liste déroulante des résidents
+function updateResidentSelect() {
+    const select = document.getElementById('new-resident');
+    select.innerHTML = '<option value="">Sélectionne un joueur...</option>';
+    
+    AUTHORIZED_USERS.forEach(user => {
+        // Ne pas afficher les résidents déjà dans le royaume
+        if (!currentKingdom.residents.includes(user)) {
+            const option = document.createElement('option');
+            option.value = user;
+            option.textContent = user;
+            select.appendChild(option);
+        }
     });
 }
 
 // Ajouter un résident
 async function addResident() {
-    const residentName = document.getElementById('new-resident').value.trim();
-    if (!residentName) return;
+    const residentName = document.getElementById('new-resident').value;
+    if (!residentName) {
+        alert('Veuillez sélectionner un joueur');
+        return;
+    }
 
     try {
         const response = await fetch(`${API_URL}/kingdom/${currentUser}/residents`, {
@@ -325,6 +403,27 @@ async function addResident() {
             loadKingdom();
         } else {
             alert('Erreur lors de l\'ajout du résident');
+        }
+    } catch (error) {
+        alert('Erreur de connexion au serveur');
+    }
+}
+
+// Supprimer un résident
+async function removeResident(residentName) {
+    if (!confirm(`Voulez-vous vraiment retirer ${residentName} du royaume ?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/kingdom/${currentUser}/residents/${residentName}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            loadKingdom();
+        } else {
+            alert('Erreur lors de la suppression du résident');
         }
     } catch (error) {
         alert('Erreur de connexion au serveur');
@@ -357,6 +456,7 @@ function logout() {
     currentUser = null;
     currentKingdom = null;
     loginStep = 'username';
+    editMode = false;
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('main-app').style.display = 'none';
     document.getElementById('username').value = '';
