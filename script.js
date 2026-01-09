@@ -1,5 +1,14 @@
-// Liste des pseudos autorisés (côté client temporaire)
-const AUTHORIZED_USERS = ['LaBall'];
+// Liste des pseudos autorisés
+const AUTHORIZED_USERS = [
+    'LaVraisBall', 
+    'LaVraiBall2', 
+    'Lulu Rose2208', 
+    'LyricTitan92747', 
+    'TheReaper', 
+    'TheTnIsBack', 
+    'superjaijai', 
+    'WardedBrush1880'
+];
 
 const API_URL = 'http://localhost:3000/api';
 let currentUser = null;

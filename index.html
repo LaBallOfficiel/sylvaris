@@ -15,6 +15,18 @@
                 <label>Pseudo Minecraft Bedrock</label>
                 <input type="text" id="username" placeholder="Entre ton pseudo..." autocomplete="off">
             </div>
+            <div class="input-group" id="password-group" style="display: none;">
+                <label>Mot de passe</label>
+                <input type="password" id="password" placeholder="Entre ton mot de passe..." autocomplete="off">
+            </div>
+            <div class="input-group" id="new-password-group" style="display: none;">
+                <label>Crée ton mot de passe</label>
+                <input type="password" id="new-password" placeholder="Crée un mot de passe..." autocomplete="off">
+            </div>
+            <div class="input-group" id="confirm-password-group" style="display: none;">
+                <label>Confirme ton mot de passe</label>
+                <input type="password" id="confirm-password" placeholder="Confirme ton mot de passe..." autocomplete="off">
+            </div>
             <button class="btn pixel-border" onclick="login()">Se connecter</button>
             <div class="error-message" id="error-message">Accès refusé. Pseudo non autorisé.</div>
         </div>
@@ -31,6 +43,7 @@
             <div class="sidebar">
                 <div class="menu-item active" data-section="accueil">Accueil</div>
                 <div class="menu-item" data-section="regle">Règle</div>
+                <div class="menu-item" data-section="royaumes">Royaumes</div>
                 <div class="menu-item" data-section="creer-royaume">Créer un royaume</div>
             </div>
 
@@ -258,6 +271,14 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Section Royaumes -->
+                <div class="content-section" id="royaumes">
+                    <div class="welcome-box pixel-border">
+                        <h2>🏰 Royaumes du Serveur</h2>
+                    </div>
+                    <div id="kingdoms-list"></div>
                 </div>
 
                 <!-- Section Créer un royaume -->
