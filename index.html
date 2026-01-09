@@ -44,7 +44,7 @@
                 <div class="menu-item active" data-section="accueil">Accueil</div>
                 <div class="menu-item" data-section="regle">Règle</div>
                 <div class="menu-item" data-section="royaumes">Royaumes</div>
-                <div class="menu-item" data-section="creer-royaume">Mon royaume</div>
+                <div class="menu-item" data-section="creer-royaume">Créer un royaume</div>
             </div>
 
             <div class="content">
@@ -281,52 +281,44 @@
                     <div id="kingdoms-list"></div>
                 </div>
 
-                <!-- Section Mon royaume -->
+                <!-- Section Créer un royaume -->
                 <div class="content-section" id="creer-royaume">
-                    <!-- Message si pas de royaume -->
-                    <div id="no-kingdom-message" style="display: none;">
-                        <div class="welcome-box pixel-border">
-                            <h2>🏰 Tu n'as pas encore de royaume</h2>
-                            <p>Crée ton royaume pour commencer ton aventure sur Sylvaris !</p>
-                        </div>
-                    
-                        <div class="form-box pixel-border">
-                            <h3>Créer un nouveau royaume</h3>
-                            <form id="kingdom-form" onsubmit="createKingdom(event)">
-                                <div class="form-field">
-                                    <label>Nom du royaume</label>
-                                    <input type="text" id="kingdom-name" required>
-                                </div>
-                                <div class="form-field">
-                                    <label>Pseudo du roi</label>
-                                    <input type="text" id="king-name" required>
-                                </div>
-                                <div class="form-field">
-                                    <label>Logo du royaume</label>
-                                    <input type="file" id="kingdom-logo" accept="image/*" required>
-                                </div>
-                                <div class="form-field">
-                                    <label>Bannière du royaume</label>
-                                    <input type="file" id="kingdom-banner" accept="image/*" required>
-                                </div>
-                                <div class="form-field">
-                                    <label>Type de monnaie</label>
-                                    <select id="currency-type" required>
-                                        <option value="">Sélectionne une monnaie</option>
-                                        <option value="emeraude">Émeraude</option>
-                                        <option value="diamant">Diamant</option>
-                                        <option value="or">Or</option>
-                                        <option value="netherite">Netherite</option>
-                                        <option value="custom">Personnalisée</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn pixel-border">Créer le royaume</button>
-                                <div class="success-message" id="create-success">Royaume créé avec succès!</div>
-                            </form>
-                        </div>
+                    <div class="form-box pixel-border">
+                        <h3>Créer un nouveau royaume</h3>
+                        <form id="kingdom-form" onsubmit="createKingdom(event)">
+                            <div class="form-field">
+                                <label>Nom du royaume</label>
+                                <input type="text" id="kingdom-name" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Pseudo du roi</label>
+                                <input type="text" id="king-name" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Logo du royaume</label>
+                                <input type="file" id="kingdom-logo" accept="image/*" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Bannière du royaume</label>
+                                <input type="file" id="kingdom-banner" accept="image/*" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Type de monnaie</label>
+                                <select id="currency-type" required>
+                                    <option value="">Sélectionne une monnaie</option>
+                                    <option value="emeraude">Émeraude</option>
+                                    <option value="diamant">Diamant</option>
+                                    <option value="or">Or</option>
+                                    <option value="netherite">Netherite</option>
+                                    <option value="custom">Personnalisée</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn pixel-border">Créer le royaume</button>
+                            <div class="success-message" id="create-success">Royaume créé avec succès!</div>
+                        </form>
                     </div>
 
-                    <!-- Gestion du royaume (visible si royaume existe) -->
+                    <!-- Gestion du royaume (visible après création) -->
                     <div id="kingdom-management" style="display: none;">
                         <div class="kingdom-info pixel-border">
                             <div class="kingdom-header">
@@ -386,13 +378,6 @@
                                 <label>Lois du royaume</label>
                                 <textarea id="kingdom-laws" placeholder="Écris les lois de ton royaume..."></textarea>
                                 <button class="btn-small pixel-border" onclick="saveLaws()" style="margin-top: 10px;">Sauvegarder les lois</button>
-                            </div>
-
-                            <!-- Bouton de suppression -->
-                            <div class="form-field" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #dc2626;">
-                                <label style="color: #ff6b6b;">⚠️ Zone de danger</label>
-                                <button class="btn-danger pixel-border" onclick="confirmDeleteKingdom()">🗑️ Supprimer définitivement le royaume</button>
-                                <p style="font-size: 9px; color: #ff6b6b; margin-top: 10px;">⚠️ Cette action est irréversible ! Toutes les données du royaume seront perdues.</p>
                             </div>
                         </div>
                     </div>

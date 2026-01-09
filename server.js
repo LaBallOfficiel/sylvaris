@@ -180,22 +180,6 @@ app.put('/api/kingdom/:user', upload.fields([{ name: 'logo', maxCount: 1 }, { na
     res.json({ success: true, kingdom });
 });
 
-// Supprimer un royaume
-app.delete('/api/kingdom/:user', (req, res) => {
-    const user = req.params.user;
-    const db = readDB();
-    
-    if (!db.kingdoms[user]) {
-        return res.status(404).json({ error: 'Royaume non trouvé' });
-    }
-    
-    // Supprimer le royaume
-    delete db.kingdoms[user];
-    writeDB(db);
-    
-    res.json({ success: true, message: 'Royaume supprimé avec succès' });
-});
-
 app.get('/api/kingdoms', (req, res) => {
     const db = readDB();
     const kingdoms = Object.values(db.kingdoms);
