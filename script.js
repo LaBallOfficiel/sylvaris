@@ -10,7 +10,9 @@ const AUTHORIZED_USERS = [
     'WardedBrush1880'
 ];
 
-const API_URL = 'http://localhost:3000/api';
+// URL de l'API hébergée sur Render
+const API_URL = 'https://sylvaris.onrender.com/api';
+
 let currentUser = null;
 let currentKingdom = null;
 let loginStep = 'username';
@@ -105,6 +107,7 @@ async function login() {
                 errorMsg.style.display = 'none';
             }
         } catch (error) {
+            console.error('Erreur:', error);
             errorMsg.textContent = 'Erreur de connexion au serveur.';
             errorMsg.style.display = 'block';
         }
@@ -135,6 +138,7 @@ async function login() {
                 errorMsg.style.display = 'block';
             }
         } catch (error) {
+            console.error('Erreur:', error);
             errorMsg.textContent = 'Erreur de connexion au serveur.';
             errorMsg.style.display = 'block';
         }
@@ -177,6 +181,7 @@ async function login() {
                 errorMsg.style.display = 'block';
             }
         } catch (error) {
+            console.error('Erreur:', error);
             errorMsg.textContent = 'Erreur de connexion au serveur.';
             errorMsg.style.display = 'block';
         }
@@ -213,6 +218,7 @@ async function createKingdom(event) {
             alert(data.error || 'Erreur lors de la création du royaume');
         }
     } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur de connexion au serveur');
     }
 }
@@ -258,6 +264,7 @@ async function saveKingdomEdits() {
             alert('Erreur lors de la modification du royaume');
         }
     } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur de connexion au serveur');
     }
 }
@@ -273,7 +280,7 @@ async function loadKingdom() {
             displayKingdom(kingdom);
         }
     } catch (error) {
-        console.error('Erreur lors du chargement du royaume');
+        console.error('Erreur lors du chargement du royaume:', error);
     }
 }
 
@@ -287,7 +294,7 @@ async function loadAllKingdoms() {
             displayAllKingdoms(kingdoms);
         }
     } catch (error) {
-        console.error('Erreur lors du chargement des royaumes');
+        console.error('Erreur lors du chargement des royaumes:', error);
     }
 }
 
@@ -354,14 +361,26 @@ function displayKingdom(kingdom) {
     
     const residentsList = document.getElementById('residents-list');
     residentsList.innerHTML = '';
-    kingdom.residents.forEach(resident => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${resident}</span>
-            <button class="remove-resident-btn" onclick="removeResident('${resident}')">🗑️ Supprimer</button>
-        `;
-        residentsList.appendChild(li);
-    });
+    
+    // Vérifier que residents existe et est un tableau
+    if (kingdom.residents && Array.isArray(kingdom.residents)) {
+        kingdom.residents.forEach(resident => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${resident}</span>
+                <button class="remove-resident-btn" data-resident="${resident}">🗑️ Supprimer</button>
+            `;
+            
+            // Ajouter l'événement directement sur le bouton créé
+            const deleteBtn = li.querySelector('.remove-resident-btn');
+            deleteBtn.addEventListener('click', function() {
+                const residentToRemove = this.getAttribute('data-resident');
+                removeResident(residentToRemove);
+            });
+            
+            residentsList.appendChild(li);
+        });
+    }
 
     // Mettre à jour la liste déroulante pour exclure les résidents déjà ajoutés
     updateResidentSelect();
@@ -374,7 +393,7 @@ function updateResidentSelect() {
     
     AUTHORIZED_USERS.forEach(user => {
         // Ne pas afficher les résidents déjà dans le royaume
-        if (!currentKingdom.residents.includes(user)) {
+        if (currentKingdom && currentKingdom.residents && !currentKingdom.residents.includes(user)) {
             const option = document.createElement('option');
             option.value = user;
             option.textContent = user;
@@ -402,9 +421,11 @@ async function addResident() {
             document.getElementById('new-resident').value = '';
             loadKingdom();
         } else {
-            alert('Erreur lors de l\'ajout du résident');
+            const data = await response.json();
+            alert(data.error || 'Erreur lors de l\'ajout du résident');
         }
     } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur de connexion au serveur');
     }
 }
@@ -416,16 +437,19 @@ async function removeResident(residentName) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/kingdom/${currentUser}/residents/${residentName}`, {
+        const response = await fetch(`${API_URL}/kingdom/${currentUser}/residents/${encodeURIComponent(residentName)}`, {
             method: 'DELETE'
         });
 
         if (response.ok) {
+            alert(`${residentName} a été retiré du royaume`);
             loadKingdom();
         } else {
-            alert('Erreur lors de la suppression du résident');
+            const data = await response.json();
+            alert(data.error || 'Erreur lors de la suppression du résident');
         }
     } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur de connexion au serveur');
     }
 }
@@ -443,10 +467,12 @@ async function saveLaws() {
 
         if (response.ok) {
             alert('Lois sauvegardées avec succès!');
+            loadKingdom();
         } else {
             alert('Erreur lors de la sauvegarde des lois');
         }
     } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur de connexion au serveur');
     }
 }
