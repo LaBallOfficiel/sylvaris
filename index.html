@@ -42,6 +42,7 @@
         <div class="container">
             <div class="sidebar">
                 <div class="menu-item active" data-section="accueil">Accueil</div>
+                <div class="menu-item" data-section="annonces">📢 Annonces</div>
                 <div class="menu-item" data-section="regle">Règle</div>
                 <div class="menu-item" data-section="royaumes">Royaumes</div>
                 <div class="menu-item" data-section="creer-royaume">Créer un royaume</div>
@@ -55,6 +56,46 @@
                         <p>Rejoins un serveur RolePlay unique où tu peux créer ou rejoindre un royaume, bâtir ton territoire, écrire ton lore et interagir avec les autres joueurs par la diplomatie, le commerce ou la guerre.</p>
                         <p>Chaque bannière représente un royaume, chaque décision a des conséquences. Un monde vivant, libre, stratégique et entièrement façonné par les joueurs.</p>
                         <p><strong>👉 Ton royaume. Ton histoire. Ton monde.</strong></p>
+                    </div>
+                </div>
+
+                <!-- Section Annonces -->
+                <div class="content-section" id="annonces">
+                    <div class="welcome-box pixel-border">
+                        <h2>📢 Annonces & Mises à Jour</h2>
+                        <p>Restez informés des dernières nouvelles du serveur Sylvaris</p>
+                    </div>
+
+                    <!-- Formulaire d'ajout d'annonce (admin uniquement) -->
+                    <div id="admin-announcement-form" style="display: none;">
+                        <div class="form-box pixel-border">
+                            <h3>🔧 Publier une annonce (Admin)</h3>
+                            <form id="announcement-form" onsubmit="createAnnouncement(event)">
+                                <div class="form-field">
+                                    <label>Titre de l'annonce</label>
+                                    <input type="text" id="announcement-title" required placeholder="Ex: Mise à jour 2.0">
+                                </div>
+                                <div class="form-field">
+                                    <label>Contenu de l'annonce</label>
+                                    <textarea id="announcement-content" required placeholder="Écrivez votre annonce ici..." style="min-height: 150px;"></textarea>
+                                </div>
+                                <div class="form-field">
+                                    <label>Image (optionnel)</label>
+                                    <input type="file" id="announcement-image" accept="image/*">
+                                    <small style="color: #a78bfa; font-size: 9px; display: block; margin-top: 5px;">📸 Ajoutez une image pour illustrer votre annonce</small>
+                                </div>
+                                <button type="submit" class="btn pixel-border">📤 Publier l'annonce</button>
+                                <div class="success-message" id="announcement-success">Annonce publiée avec succès!</div>
+                                <div class="error-message" id="announcement-error" style="display: none;">Erreur lors de la publication</div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Liste des annonces -->
+                    <div id="announcements-list">
+                        <div class="loading-message pixel-border" style="text-align: center; padding: 30px; color: #a78bfa;">
+                            Chargement des annonces...
+                        </div>
                     </div>
                 </div>
 
@@ -295,12 +336,14 @@
                                 <input type="text" id="king-name" required>
                             </div>
                             <div class="form-field">
-                                <label>Logo du royaume</label>
+                                <label>Logo du royaume (requis)</label>
                                 <input type="file" id="kingdom-logo" accept="image/*" required>
+                                <small style="color: #a78bfa; font-size: 9px; display: block; margin-top: 5px;">📸 Fichier image (PNG, JPG, GIF)</small>
                             </div>
                             <div class="form-field">
-                                <label>Bannière du royaume</label>
-                                <input type="file" id="kingdom-banner" accept="image/*" required>
+                                <label>Bannière du royaume (optionnel)</label>
+                                <input type="file" id="kingdom-banner" accept="image/*">
+                                <small style="color: #a78bfa; font-size: 9px; display: block; margin-top: 5px;">📸 Fichier image (PNG, JPG, GIF)</small>
                             </div>
                             <div class="form-field">
                                 <label>Type de monnaie</label>
@@ -315,6 +358,7 @@
                             </div>
                             <button type="submit" class="btn pixel-border">Créer le royaume</button>
                             <div class="success-message" id="create-success">Royaume créé avec succès!</div>
+                            <div class="error-message" id="create-error" style="display: none;">Erreur lors de la création</div>
                         </form>
                     </div>
 
@@ -322,8 +366,10 @@
                     <div id="kingdom-management" style="display: none;">
                         <div class="kingdom-info pixel-border">
                             <div class="kingdom-header">
-                                <img id="display-logo" class="kingdom-logo" src="" alt="Logo">
-                                <img id="display-banner" class="kingdom-banner" src="" alt="Bannière">
+                                <div class="kingdom-images">
+                                    <img id="display-logo" class="kingdom-logo" src="" alt="Logo">
+                                    <img id="display-banner" class="kingdom-banner" src="" alt="Bannière" style="display: none;">
+                                </div>
                                 <div class="kingdom-title">
                                     <h2 id="display-kingdom-name"></h2>
                                     <p>Roi: <span id="display-king-name"></span> | Monnaie: <span id="display-currency"></span></p>
@@ -378,6 +424,13 @@
                                 <label>Lois du royaume</label>
                                 <textarea id="kingdom-laws" placeholder="Écris les lois de ton royaume..."></textarea>
                                 <button class="btn-small pixel-border" onclick="saveLaws()" style="margin-top: 10px;">Sauvegarder les lois</button>
+                            </div>
+
+                            <!-- Bouton de suppression du royaume -->
+                            <div class="danger-zone pixel-border" style="margin-top: 40px; padding: 20px; background: rgba(220, 38, 38, 0.1); border-color: #dc2626;">
+                                <h3 style="color: #ef4444; font-size: 14px; margin-bottom: 15px;">⚠️ Zone dangereuse</h3>
+                                <p style="font-size: 10px; color: #fca5a5; margin-bottom: 15px;">La suppression de votre royaume est définitive et irréversible.</p>
+                                <button class="btn-danger pixel-border" onclick="deleteKingdom()">🗑️ Supprimer le royaume</button>
                             </div>
                         </div>
                     </div>
