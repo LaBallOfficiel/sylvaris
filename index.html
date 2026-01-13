@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sylvaris - Saison 2</title>
     
-    <!-- Styles CSS -->
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="login.css">
     <link rel="stylesheet" href="layout.css">
@@ -15,7 +14,6 @@
     <link rel="stylesheet" href="announcements.css">
 </head>
 <body>
-    <!-- Écran de connexion -->
     <div id="login-screen">
         <div class="login-container pixel-border">
             <h1 class="login-title">SYLVARIS - SAISON 2</h1>
@@ -40,7 +38,6 @@
         </div>
     </div>
 
-    <!-- Application principale -->
     <div id="main-app">
         <div class="header">
             <img src="logoS.png" alt="Logo Sylvaris" class="logo" id="server-logo">
@@ -57,7 +54,6 @@
             </div>
 
             <div class="content">
-                <!-- Section Accueil -->
                 <div class="content-section active" id="accueil">
                     <div class="welcome-box pixel-border">
                         <h2>🌍 Serveur Minecraft Bedrock RP – Realms</h2>
@@ -67,14 +63,12 @@
                     </div>
                 </div>
 
-                <!-- Section Annonces -->
                 <div class="content-section" id="annonces">
                     <div class="welcome-box pixel-border">
                         <h2>📢 Annonces & Mises à Jour</h2>
                         <p>Restez informés des dernières nouvelles du serveur Sylvaris</p>
                     </div>
 
-                    <!-- Formulaire d'ajout d'annonce (admin uniquement) -->
                     <div id="admin-announcement-form" style="display: none;">
                         <div class="form-box pixel-border">
                             <h3>📝 Publier une annonce (Admin)</h3>
@@ -99,7 +93,6 @@
                         </div>
                     </div>
 
-                    <!-- Liste des annonces -->
                     <div id="announcements-list">
                         <div class="loading-message pixel-border" style="text-align: center; padding: 30px; color: #a78bfa;">
                             Chargement des annonces...
@@ -107,14 +100,12 @@
                     </div>
                 </div>
 
-                <!-- Section Règle -->
                 <div class="content-section" id="regle">
                     <div class="welcome-box pixel-border">
                         <h2>📜 Règlement Officiel du Serveur</h2>
                     </div>
 
                     <div class="rules-container">
-                        <!-- Règle 1 -->
                         <div class="rule-item pixel-border">
                             <div class="rule-header" onclick="toggleRule(1)">
                                 <span>1. 🤝 Règles Générales de Conduite</span>
@@ -130,7 +121,6 @@
                             </div>
                         </div>
 
-                        <!-- Règle 2 -->
                         <div class="rule-item pixel-border">
                             <div class="rule-header" onclick="toggleRule(2)">
                                 <span>2. 👑 Royaumes et Bannières</span>
@@ -166,13 +156,68 @@
                             </div>
                         </div>
 
-                        <!-- Les autres règles restent identiques... -->
-                        <!-- Pour économiser de l'espace, je vais continuer avec la structure -->
-                        
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(3)">
+                                <span>3. ⚔️ Guerre et Diplomatie</span>
+                                <span class="arrow" id="arrow-3">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-3">
+                                <ul>
+                                    <li>Les guerres doivent être déclarées officiellement sur Discord avant toute action hostile.</li>
+                                    <li>Pendant une guerre, le PvP et la destruction de bâtiments ennemis sont autorisés.</li>
+                                    <li>Les traités de paix, alliances et accords commerciaux doivent être documentés sur Discord.</li>
+                                    <li>Le grief gratuit et non justifié par une guerre déclarée est interdit.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(4)">
+                                <span>4. 💰 Économie et Commerce</span>
+                                <span class="arrow" id="arrow-4">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-4">
+                                <ul>
+                                    <li>Chaque royaume définit sa propre monnaie.</li>
+                                    <li>Les échanges commerciaux entre royaumes sont encouragés.</li>
+                                    <li>Les vols et arnaques sont interdits, sauf en temps de guerre déclarée.</li>
+                                    <li>Les marchés et zones commerciales neutres doivent être respectés.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(5)">
+                                <span>5. 🏗️ Construction et Territoire</span>
+                                <span class="arrow" id="arrow-5">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-5">
+                                <ul>
+                                    <li>Construisez uniquement sur votre territoire ou avec permission.</li>
+                                    <li>Les constructions doivent respecter le lore et l'esthétique du serveur.</li>
+                                    <li>Ne construisez pas trop près du spawn ou des territoires existants sans accord.</li>
+                                    <li>Les structures abandonnées sans bannière peuvent être démolies ou récupérées.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="rule-item pixel-border">
+                            <div class="rule-header" onclick="toggleRule(6)">
+                                <span>6. 📋 Sanctions</span>
+                                <span class="arrow" id="arrow-6">▼</span>
+                            </div>
+                            <div class="rule-content" id="rule-6">
+                                <ul>
+                                    <li>Avertissement : première infraction mineure.</li>
+                                    <li>Bannissement temporaire : infractions répétées ou graves.</li>
+                                    <li>Bannissement définitif : triche, harcèlement grave, ou comportement toxique persistant.</li>
+                                    <li>Toutes les sanctions sont décidées par l'administration et peuvent être contestées sur Discord.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Section Royaumes -->
                 <div class="content-section" id="royaumes">
                     <div class="welcome-box pixel-border">
                         <h2>🏰 Royaumes du Serveur</h2>
@@ -180,7 +225,6 @@
                     <div id="kingdoms-list"></div>
                 </div>
 
-                <!-- Section Créer un royaume -->
                 <div class="content-section" id="creer-royaume">
                     <div class="form-box pixel-border">
                         <h3>Créer un nouveau royaume</h3>
@@ -220,7 +264,6 @@
                         </form>
                     </div>
 
-                    <!-- Gestion du royaume (visible après création) -->
                     <div id="kingdom-management" style="display: none;">
                         <div class="kingdom-info pixel-border">
                             <div class="kingdom-header">
@@ -235,7 +278,6 @@
                                 <button class="btn-small pixel-border" onclick="toggleEditMode()">✏️ Modifier</button>
                             </div>
 
-                            <!-- Mode édition -->
                             <div id="edit-mode" style="display: none;">
                                 <div class="form-field">
                                     <label>Nom du royaume</label>
@@ -284,7 +326,6 @@
                                 <button class="btn-small pixel-border" onclick="saveLaws()" style="margin-top: 10px;">Sauvegarder les lois</button>
                             </div>
 
-                            <!-- Bouton de suppression du royaume -->
                             <div class="danger-zone pixel-border" style="margin-top: 40px; padding: 20px; background: rgba(220, 38, 38, 0.1); border-color: #dc2626;">
                                 <h3 style="color: #ef4444; font-size: 14px; margin-bottom: 15px;">⚠️ Zone dangereuse</h3>
                                 <p style="font-size: 10px; color: #fca5a5; margin-bottom: 15px;">La suppression de votre royaume est définitive et irréversible.</p>
@@ -299,7 +340,6 @@
         <button class="logout-btn pixel-border" onclick="logout()">Déconnexion</button>
     </div>
 
-    <!-- Scripts JavaScript -->
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script src="auth.js"></script>
