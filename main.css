@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ===== BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Press Start 2P', monospace;
+    background: linear-gradient(135deg, #1a0033 0%, #2d1b4e 50%, #4a2c6e 100%);
+    min-height: 100vh;
+    color: #e0d4ff;
+    image-rendering: pixelated;
+}
+
+/* ===== EFFET PIXELISÉ MINECRAFT ===== */
+.pixel-border {
+    border: 4px solid #8b5cf6;
+    box-shadow: 
+        inset 0 0 0 2px #a78bfa,
+        0 4px 0 #6d28d9,
+        0 8px 20px rgba(139, 92, 246, 0.4);
+}
+
+/* ===== MESSAGES ===== */
+.error-message {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    padding: 10px;
+    margin-top: 15px;
+    border: 2px solid #ff6b6b;
+    display: none;
+    font-size: 10px;
+}
+
+.success-message {
+    background: rgba(34, 197, 94, 0.2);
+    border: 2px solid #22c55e;
+    color: #86efac;
+    padding: 15px;
+    margin-top: 20px;
+    font-size: 11px;
+    display: none;
+}
+
+.loading-message {
+    background: rgba(45, 27, 78, 0.7);
+}
+
+/* ===== BOUTONS ===== */
+.btn {
+    padding: 15px 40px;
+    background: #7c3aed;
+    border: 3px solid #8b5cf6;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 20px;
+}
+
+.btn:hover {
+    background: #8b5cf6;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #6d28d9;
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 #6d28d9;
+}
+
+.btn-small {
+    padding: 10px 20px;
+    background: #7c3aed;
+    border: 2px solid #8b5cf6;
+    color: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background: #8b5cf6;
+}
+
+.btn-danger {
+    padding: 12px 25px;
+    background: #dc2626;
+    border: 3px solid #ef4444;
+    color: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn-danger:hover {
+    background: #ef4444;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #b91c1c;
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 #b91c1c;
+}
+
+.logout-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 25px;
+    background: #dc2626;
+    border: 3px solid #ef4444;
+    color: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #ef4444;
+}
+
+.remove-resident-btn {
+    background: #dc2626;
+    border: 2px solid #ef4444;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 9px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.remove-resident-btn:hover {
+    background: #ef4444;
+}
+
+/* ===== ZONES SPÉCIALES ===== */
+.danger-zone {
+    border: 4px solid #dc2626 !important;
+    box-shadow: 
+        inset 0 0 0 2px #ef4444,
+        0 4px 0 #b91c1c,
+        0 8px 20px rgba(220, 38, 38, 0.4) !important;
+}

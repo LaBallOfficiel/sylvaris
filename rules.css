@@ -1,0 +1,82 @@
+/* ===== RÈGLES DÉPLIABLES ===== */
+.rules-container {
+    margin-top: 20px;
+}
+
+.rule-item {
+    background: rgba(45, 27, 78, 0.7);
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.rule-header {
+    padding: 20px 25px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #c4b5fd;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.rule-header:hover {
+    background: rgba(139, 92, 246, 0.2);
+}
+
+.rule-header .arrow {
+    font-size: 14px;
+    transition: transform 0.3s;
+    color: #8b5cf6;
+}
+
+.rule-header .arrow.open {
+    transform: rotate(180deg);
+}
+
+.rule-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    padding: 0 25px;
+}
+
+.rule-content.open {
+    max-height: 2000px;
+    padding: 20px 25px;
+    border-top: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.rule-content p {
+    font-size: 11px;
+    color: #ddd6fe;
+    margin-bottom: 12px;
+    line-height: 1.7;
+}
+
+.rule-content ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.rule-content ul li {
+    font-size: 10px;
+    color: #ddd6fe;
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.7;
+}
+
+.rule-content ul li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #8b5cf6;
+    font-size: 12px;
+}
+
+.rule-content strong {
+    color: #a78bfa;
+}

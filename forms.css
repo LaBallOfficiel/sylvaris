@@ -1,0 +1,83 @@
+/* ===== FORMULAIRES ===== */
+.form-box {
+    background: rgba(45, 27, 78, 0.7);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.form-box h3 {
+    font-size: 16px;
+    color: #c4b5fd;
+    margin-bottom: 25px;
+}
+
+.form-field {
+    margin-bottom: 25px;
+}
+
+.form-field label {
+    display: block;
+    font-size: 11px;
+    color: #ddd6fe;
+    margin-bottom: 8px;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(30, 0, 60, 0.8);
+    border: 2px solid #7c3aed;
+    color: #e0d4ff;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.form-field textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: #a78bfa;
+}
+
+.file-upload {
+    padding: 20px;
+    border: 2px dashed #7c3aed;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-upload:hover {
+    border-color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+}
+
+/* ===== FORMULAIRE D'AJOUT DE RÉSIDENT ===== */
+.add-resident-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.add-resident-form input,
+.add-resident-form select {
+    flex: 1;
+    padding: 12px;
+    background: rgba(30, 0, 60, 0.8);
+    border: 2px solid #7c3aed;
+    color: #e0d4ff;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.add-resident-form select:focus {
+    border-color: #a78bfa;
+}
