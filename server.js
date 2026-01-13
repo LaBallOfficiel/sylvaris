@@ -148,20 +148,49 @@ app.post('/api/set-password', async (req, res) => {
     try {
         const passwordHash = hashPassword(password);
         
-        const { data, error } = await supabase
+        // Vérifier si l'utilisateur existe déjà
+        const { data: existingUser } = await supabase
             .from('users')
-            .upsert({ 
-                username, 
-                password_hash: passwordHash,
-                has_password: true,
-                created_at: new Date().toISOString()
-            }, { onConflict: 'username' })
-            .select()
-            .single();
+            .select('username')
+            .eq('username', username)
+            .maybeSingle();
+        
+        let data, error;
+        
+        if (existingUser) {
+            // Mettre à jour l'utilisateur existant
+            const result = await supabase
+                .from('users')
+                .update({ 
+                    password_hash: passwordHash,
+                    has_password: true
+                })
+                .eq('username', username)
+                .select()
+                .single();
+            
+            data = result.data;
+            error = result.error;
+        } else {
+            // Créer un nouvel utilisateur
+            const result = await supabase
+                .from('users')
+                .insert({ 
+                    username, 
+                    password_hash: passwordHash,
+                    has_password: true,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            
+            data = result.data;
+            error = result.error;
+        }
         
         if (error) {
             console.error('Erreur set-password:', error);
-            return res.status(500).json({ error: 'Erreur lors de la création du mot de passe' });
+            return res.status(500).json({ error: 'Erreur lors de la création du mot de passe: ' + error.message });
         }
         
         req.session.username = username;
@@ -169,7 +198,7 @@ app.post('/api/set-password', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Erreur set-password:', error);
-        res.status(500).json({ error: 'Erreur lors de la création du mot de passe' });
+        res.status(500).json({ error: 'Erreur lors de la création du mot de passe: ' + error.message });
     }
 });
 
