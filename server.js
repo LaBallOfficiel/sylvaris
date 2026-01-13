@@ -10,15 +10,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ========== CONFIGURATION SUPABASE ==========
-const supabaseUrl = process.env.SUPABASE_URL || 'https://zwoddwbqeubntijdwtzi.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3b2Rkd2JxZXVibnRpamR3dHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3ODc3NjQsImV4cCI6MjA1MjM2Mzc2NH0.k1-FglD7xYQsm3_F09fGGlXlHPWKz0VN6pwFKjKKqcQ';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error('❌ ERREUR : Variables SUPABASE_URL et SUPABASE_ANON_KEY requises');
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ ERREUR : Variables SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY requises');
     process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// ✅ Utilisation de la clé SERVICE ROLE pour contourner RLS
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
 
 // ========== CONFIGURATION MULTER ==========
 const storage = multer.memoryStorage();
