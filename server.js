@@ -1,45 +1,27 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const session = require('express-session');
 const path = require('path');
-const fs = require('fs');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Créer le dossier uploads s'il n'existe pas
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log('📁 Dossier uploads créé');
+// ========== CONFIGURATION SUPABASE ==========
+const supabaseUrl = process.env.SUPABASE_URL || 'https://zwoddwbqeubntijdwtzi.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3b2Rkd2JxZXVibnRpamR3dHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3ODc3NjQsImV4cCI6MjA1MjM2Mzc2NH0.k1-FglD7xYQsm3_F09fGGlXlHPWKz0VN6pwFKjKKqcQ';
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ ERREUR : Variables SUPABASE_URL et SUPABASE_ANON_KEY requises');
+    process.exit(1);
 }
 
-// Configuration Supabase
-const supabaseUrl = process.env.SUPABASE_URL || 'https://zwoddwbqeubntijdwtzi.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_0Okn-uWpAyzNq4QCc0PLOA_zeyTFFzR';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// URL de base pour les fichiers uploadés
-const BASE_URL = process.env.RENDER_EXTERNAL_URL || process.env.BASE_URL || `http://localhost:${PORT}`;
-
-// Middleware
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
-
-// Configuration Multer pour les uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
-});
-
+// ========== CONFIGURATION MULTER ==========
+const storage = multer.memoryStorage();
 const upload = multer({ 
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 },
@@ -56,19 +38,76 @@ const upload = multer({
     }
 });
 
-// ========== ROUTES ==========
+// ========== MIDDLEWARE ==========
+app.use(cors({ 
+    origin: true,
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'sylvaris-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}));
 
-// Route de base
+// ========== UTILITAIRES ==========
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+async function uploadToSupabase(file, bucket = 'kingdoms') {
+    try {
+        const fileExt = path.extname(file.originalname);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExt}`;
+        const filePath = fileName;
+
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .upload(filePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false
+            });
+
+        if (error) {
+            console.error('Erreur upload Supabase:', error);
+            throw error;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath);
+
+        return publicUrlData.publicUrl;
+    } catch (error) {
+        console.error('Erreur uploadToSupabase:', error);
+        throw error;
+    }
+}
+
+// ========== ROUTES DE BASE ==========
 app.get('/', (req, res) => {
-    res.send('Backend Sylvaris - Serveur en ligne ✅');
+    res.json({ 
+        message: 'Backend Sylvaris - Serveur en ligne ✅',
+        version: '2.0',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// Route de santé
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        supabase: supabaseUrl ? 'connected' : 'disconnected'
+    });
 });
 
-// Vérifier si un utilisateur existe
+// ========== AUTHENTIFICATION ==========
 app.get('/api/check-user/:username', async (req, res) => {
     const username = req.params.username;
     
@@ -77,10 +116,11 @@ app.get('/api/check-user/:username', async (req, res) => {
             .from('users')
             .select('username, has_password')
             .eq('username', username)
-            .single();
+            .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
-            throw error;
+        if (error) {
+            console.error('Erreur check-user:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
         }
         
         if (data) {
@@ -94,7 +134,6 @@ app.get('/api/check-user/:username', async (req, res) => {
     }
 });
 
-// Définir un mot de passe
 app.post('/api/set-password', async (req, res) => {
     const { username, password } = req.body;
     
@@ -102,20 +141,31 @@ app.post('/api/set-password', async (req, res) => {
         return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     }
     
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+    }
+    
     try {
+        const passwordHash = hashPassword(password);
+        
         const { data, error } = await supabase
             .from('users')
             .upsert({ 
                 username, 
-                password_hash: password,
+                password_hash: passwordHash,
                 has_password: true,
                 created_at: new Date().toISOString()
             }, { onConflict: 'username' })
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur set-password:', error);
+            return res.status(500).json({ error: 'Erreur lors de la création du mot de passe' });
+        }
         
+        req.session.username = username;
+        console.log('✅ Mot de passe défini pour:', username);
         res.json({ success: true });
     } catch (error) {
         console.error('Erreur set-password:', error);
@@ -123,7 +173,6 @@ app.post('/api/set-password', async (req, res) => {
     }
 });
 
-// Connexion avec mot de passe
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
@@ -138,10 +187,18 @@ app.post('/api/login', async (req, res) => {
             .eq('username', username)
             .single();
         
-        if (error || !data || data.password_hash !== password) {
+        if (error || !data) {
+            return res.status(401).json({ error: 'Utilisateur introuvable' });
+        }
+        
+        const passwordHash = hashPassword(password);
+        
+        if (data.password_hash !== passwordHash) {
             return res.status(401).json({ error: 'Mot de passe incorrect' });
         }
         
+        req.session.username = username;
+        console.log('✅ Connexion réussie:', username);
         res.json({ success: true, user: username });
     } catch (error) {
         console.error('Erreur login:', error);
@@ -149,7 +206,24 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Créer un royaume
+app.get('/api/session', (req, res) => {
+    if (req.session.username) {
+        res.json({ authenticated: true, username: req.session.username });
+    } else {
+        res.json({ authenticated: false });
+    }
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Erreur lors de la déconnexion' });
+        }
+        res.json({ success: true });
+    });
+});
+
+// ========== ROYAUMES ==========
 app.post('/api/kingdom', upload.fields([
     { name: 'logo', maxCount: 1 }, 
     { name: 'banner', maxCount: 1 }
@@ -166,19 +240,22 @@ app.post('/api/kingdom', upload.fields([
     }
     
     try {
-        // Vérifier si l'utilisateur a déjà un royaume
         const { data: existing } = await supabase
             .from('kingdoms')
             .select('id')
             .eq('owner', user)
-            .single();
+            .maybeSingle();
         
         if (existing) {
             return res.status(400).json({ error: 'Vous avez déjà un royaume' });
         }
         
-        const logoUrl = `${BASE_URL}/uploads/${req.files.logo[0].filename}`;
-        const bannerUrl = req.files.banner ? `${BASE_URL}/uploads/${req.files.banner[0].filename}` : null;
+        const logoUrl = await uploadToSupabase(req.files.logo[0], 'kingdoms');
+        
+        let bannerUrl = null;
+        if (req.files.banner) {
+            bannerUrl = await uploadToSupabase(req.files.banner[0], 'kingdoms');
+        }
         
         const { data, error } = await supabase
             .from('kingdoms')
@@ -196,7 +273,10 @@ app.post('/api/kingdom', upload.fields([
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur création royaume:', error);
+            return res.status(500).json({ error: 'Erreur lors de la création du royaume' });
+        }
         
         console.log('✅ Royaume créé:', data.name);
         res.json({ success: true, kingdom: data });
@@ -206,7 +286,6 @@ app.post('/api/kingdom', upload.fields([
     }
 });
 
-// Récupérer tous les royaumes
 app.get('/api/kingdoms', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -214,7 +293,10 @@ app.get('/api/kingdoms', async (req, res) => {
             .select('*')
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur récupération royaumes:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
+        }
         
         res.json(data || []);
     } catch (error) {
@@ -223,7 +305,6 @@ app.get('/api/kingdoms', async (req, res) => {
     }
 });
 
-// Récupérer un royaume par utilisateur
 app.get('/api/kingdom/:user', async (req, res) => {
     const user = req.params.user;
     
@@ -232,10 +313,11 @@ app.get('/api/kingdom/:user', async (req, res) => {
             .from('kingdoms')
             .select('*')
             .eq('owner', user)
-            .single();
+            .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
-            throw error;
+        if (error) {
+            console.error('Erreur récupération royaume:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
         }
         
         if (!data) {
@@ -249,7 +331,6 @@ app.get('/api/kingdom/:user', async (req, res) => {
     }
 });
 
-// Modifier un royaume
 app.put('/api/kingdom/:user', upload.fields([
     { name: 'logo', maxCount: 1 }, 
     { name: 'banner', maxCount: 1 }
@@ -262,7 +343,7 @@ app.put('/api/kingdom/:user', upload.fields([
             .from('kingdoms')
             .select('*')
             .eq('owner', user)
-            .single();
+            .maybeSingle();
         
         if (fetchError || !kingdom) {
             return res.status(404).json({ error: 'Royaume non trouvé' });
@@ -274,11 +355,11 @@ app.put('/api/kingdom/:user', upload.fields([
         if (currency) updates.currency = currency;
         
         if (req.files?.logo) {
-            updates.logo = `${BASE_URL}/uploads/${req.files.logo[0].filename}`;
+            updates.logo = await uploadToSupabase(req.files.logo[0], 'kingdoms');
         }
         
         if (req.files?.banner) {
-            updates.banner = `${BASE_URL}/uploads/${req.files.banner[0].filename}`;
+            updates.banner = await uploadToSupabase(req.files.banner[0], 'kingdoms');
         }
         
         const { data, error } = await supabase
@@ -288,8 +369,12 @@ app.put('/api/kingdom/:user', upload.fields([
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur modification royaume:', error);
+            return res.status(500).json({ error: 'Erreur lors de la modification' });
+        }
         
+        console.log('✅ Royaume modifié:', data.name);
         res.json({ success: true, kingdom: data });
     } catch (error) {
         console.error('Erreur modification royaume:', error);
@@ -297,7 +382,6 @@ app.put('/api/kingdom/:user', upload.fields([
     }
 });
 
-// Ajouter un résident
 app.post('/api/kingdom/:user/residents', async (req, res) => {
     const user = req.params.user;
     const { resident } = req.body;
@@ -329,8 +413,12 @@ app.post('/api/kingdom/:user/residents', async (req, res) => {
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur ajout résident:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
+        }
         
+        console.log('✅ Résident ajouté:', resident);
         res.json({ success: true, residents: data.residents });
     } catch (error) {
         console.error('Erreur ajout résident:', error);
@@ -338,7 +426,6 @@ app.post('/api/kingdom/:user/residents', async (req, res) => {
     }
 });
 
-// Supprimer un résident
 app.delete('/api/kingdom/:user/residents/:resident', async (req, res) => {
     const user = req.params.user;
     const resident = decodeURIComponent(req.params.resident);
@@ -363,8 +450,12 @@ app.delete('/api/kingdom/:user/residents/:resident', async (req, res) => {
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur suppression résident:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
+        }
         
+        console.log('✅ Résident supprimé:', resident);
         res.json({ success: true, residents: data.residents });
     } catch (error) {
         console.error('Erreur suppression résident:', error);
@@ -372,7 +463,6 @@ app.delete('/api/kingdom/:user/residents/:resident', async (req, res) => {
     }
 });
 
-// Modifier les lois
 app.put('/api/kingdom/:user/laws', async (req, res) => {
     const user = req.params.user;
     const { laws } = req.body;
@@ -385,8 +475,12 @@ app.put('/api/kingdom/:user/laws', async (req, res) => {
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur modification lois:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
+        }
         
+        console.log('✅ Lois mises à jour pour:', user);
         res.json({ success: true, laws: data.laws });
     } catch (error) {
         console.error('Erreur modification lois:', error);
@@ -394,7 +488,6 @@ app.put('/api/kingdom/:user/laws', async (req, res) => {
     }
 });
 
-// Supprimer un royaume
 app.delete('/api/kingdom/:user', async (req, res) => {
     const user = req.params.user;
     
@@ -404,7 +497,10 @@ app.delete('/api/kingdom/:user', async (req, res) => {
             .delete()
             .eq('owner', user);
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur suppression royaume:', error);
+            return res.status(500).json({ error: 'Erreur lors de la suppression' });
+        }
         
         console.log('✅ Royaume supprimé pour:', user);
         res.json({ success: true, message: 'Royaume supprimé avec succès' });
@@ -414,9 +510,7 @@ app.delete('/api/kingdom/:user', async (req, res) => {
     }
 });
 
-// ===== ANNONCES =====
-
-// Créer une annonce
+// ========== ANNONCES ==========
 app.post('/api/announcements', upload.single('image'), async (req, res) => {
     console.log('=== CRÉATION ANNONCE ===');
     const { title, content, author } = req.body;
@@ -430,7 +524,11 @@ app.post('/api/announcements', upload.single('image'), async (req, res) => {
     }
     
     try {
-        const imageUrl = req.file ? `${BASE_URL}/uploads/${req.file.filename}` : null;
+        let imageUrl = null;
+        
+        if (req.file) {
+            imageUrl = await uploadToSupabase(req.file, 'announcements');
+        }
         
         const { data, error } = await supabase
             .from('announcements')
@@ -444,9 +542,12 @@ app.post('/api/announcements', upload.single('image'), async (req, res) => {
             .select()
             .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur création annonce:', error);
+            return res.status(500).json({ error: 'Erreur lors de la publication' });
+        }
         
-        console.log('✅ Annonce créée');
+        console.log('✅ Annonce créée:', title);
         res.json({ success: true, announcement: data });
     } catch (error) {
         console.error('Erreur création annonce:', error);
@@ -454,7 +555,6 @@ app.post('/api/announcements', upload.single('image'), async (req, res) => {
     }
 });
 
-// Récupérer toutes les annonces
 app.get('/api/announcements', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -462,7 +562,10 @@ app.get('/api/announcements', async (req, res) => {
             .select('*')
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur récupération annonces:', error);
+            return res.status(500).json({ error: 'Erreur serveur' });
+        }
         
         res.json(data || []);
     } catch (error) {
@@ -471,7 +574,6 @@ app.get('/api/announcements', async (req, res) => {
     }
 });
 
-// Supprimer une annonce
 app.delete('/api/announcements/:id', async (req, res) => {
     const { id } = req.params;
     
@@ -481,9 +583,12 @@ app.delete('/api/announcements/:id', async (req, res) => {
             .delete()
             .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+            console.error('Erreur suppression annonce:', error);
+            return res.status(500).json({ error: 'Erreur lors de la suppression' });
+        }
         
-        console.log('✅ Annonce supprimée');
+        console.log('✅ Annonce supprimée:', id);
         res.json({ success: true });
     } catch (error) {
         console.error('Erreur suppression annonce:', error);
@@ -491,7 +596,7 @@ app.delete('/api/announcements/:id', async (req, res) => {
     }
 });
 
-// Gestion des erreurs Multer
+// ========== GESTION DES ERREURS ==========
 app.use((error, req, res, next) => {
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
@@ -499,15 +604,20 @@ app.use((error, req, res, next) => {
         }
         return res.status(400).json({ error: 'Erreur lors de l\'upload du fichier' });
     } else if (error) {
+        console.error('Erreur middleware:', error);
         return res.status(400).json({ error: error.message });
     }
     next();
 });
 
-// Démarrage du serveur
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route non trouvée' });
+});
+
+// ========== DÉMARRAGE ==========
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🟣 Serveur Sylvaris lancé sur le port ${PORT}`);
-    console.log(`🌐 URL de base: ${BASE_URL}`);
-    console.log(`💾 Base de données: Supabase`);
-    console.log(`📁 Dossier uploads: ${uploadsDir}`);
+    console.log(`🌐 Mode: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`💾 Supabase URL: ${supabaseUrl}`);
+    console.log(`✅ Serveur prêt à accepter des connexions`);
 });
