@@ -17,28 +17,68 @@
     <div id="login-screen">
         <div class="login-container pixel-border">
             <h1 class="login-title">SYLVARIS - SAISON 2</h1>
+            
+            <!-- Pseudo -->
             <div class="input-group">
                 <label>Pseudo Minecraft Bedrock</label>
                 <input type="text" id="username" placeholder="Entre ton pseudo..." autocomplete="off">
             </div>
+            
+            <!-- Mot de passe existant -->
             <div class="input-group" id="password-group" style="display: none;">
                 <label>Mot de passe</label>
                 <input type="password" id="password" placeholder="Entre ton mot de passe..." autocomplete="off">
             </div>
+            
+            <!-- Lien "Mot de passe oublié" -->
+            <div id="forgot-password-link" style="display: none; text-align: right; margin-top: -15px; margin-bottom: 15px;">
+                <a href="#" onclick="showForgotPassword(); return false;" style="color: #a78bfa; font-size: 9px; text-decoration: underline;">Mot de passe oublié ?</a>
+            </div>
+            
+            <!-- Nouveau mot de passe (première connexion) -->
             <div class="input-group" id="new-password-group" style="display: none;">
                 <label>Crée ton mot de passe</label>
                 <input type="password" id="new-password" placeholder="Crée un mot de passe..." autocomplete="off">
             </div>
+            
             <div class="input-group" id="confirm-password-group" style="display: none;">
                 <label>Confirme ton mot de passe</label>
                 <input type="password" id="confirm-password" placeholder="Confirme ton mot de passe..." autocomplete="off">
             </div>
-            <button class="btn pixel-border" onclick="login()">Se connecter</button>
+            
+            <!-- Reset mot de passe -->
+            <div class="input-group" id="reset-password-group" style="display: none;">
+                <label>Nouveau mot de passe</label>
+                <input type="password" id="reset-password" placeholder="Entre ton nouveau mot de passe..." autocomplete="off">
+            </div>
+            
+            <div class="input-group" id="reset-confirm-password-group" style="display: none;">
+                <label>Confirme le nouveau mot de passe</label>
+                <input type="password" id="reset-confirm-password" placeholder="Confirme ton nouveau mot de passe..." autocomplete="off">
+            </div>
+            
+            <!-- Boutons -->
+            <button class="btn pixel-border" id="login-btn" onclick="login()">Se connecter</button>
+            <button class="btn pixel-border" id="reset-password-btn" onclick="resetPassword()" style="display: none; background: #f59e0b; border-color: #fbbf24;">Réinitialiser le mot de passe</button>
+            <button class="btn pixel-border" id="cancel-reset-btn" onclick="cancelReset()" style="display: none; background: #6b7280; border-color: #9ca3af; margin-top: 10px;">Annuler</button>
+            
+            <!-- Loader de connexion -->
+            <div class="login-loader" id="login-loader">
+                <div class="spinner"></div>
+                <div class="loader-text">
+                    <p>Connexion en cours...</p>
+                    <p>Cela peut prendre 1 à 2 minutes</p>
+                </div>
+            </div>
+            
+            <!-- Messages -->
             <div class="error-message" id="error-message">Accès refusé. Pseudo non autorisé.</div>
+            <div class="success-message" id="success-message-reset" style="display: none;">Mot de passe réinitialisé !</div>
         </div>
     </div>
 
     <div id="main-app">
+        <!-- Reste de l'application... -->
         <div class="header">
             <img src="logoS.png" alt="Logo Sylvaris" class="logo" id="server-logo">
             <div class="user-info">Connecté en tant que <span id="current-user"></span></div>
@@ -188,7 +228,7 @@
 
                         <div class="rule-item pixel-border">
                             <div class="rule-header" onclick="toggleRule(5)">
-                                <span>5. 🏗️ Construction et Territoire</span>
+                                <span>5. 🗺️ Construction et Territoire</span>
                                 <span class="arrow" id="arrow-5">▼</span>
                             </div>
                             <div class="rule-content" id="rule-5">

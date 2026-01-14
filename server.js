@@ -258,6 +258,56 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
+// ========== RESET MOT DE PASSE ==========
+app.post('/api/reset-password', async (req, res) => {
+    const { username, newPassword } = req.body;
+    
+    if (!username || !newPassword) {
+        return res.status(400).json({ error: 'Pseudo et nouveau mot de passe requis' });
+    }
+    
+    if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+    }
+    
+    try {
+        // Vérifier que l'utilisateur existe
+        const { data: user, error: fetchError } = await supabase
+            .from('users')
+            .select('username')
+            .eq('username', username)
+            .maybeSingle();
+        
+        if (fetchError || !user) {
+            return res.status(404).json({ error: 'Utilisateur introuvable' });
+        }
+        
+        // Mettre à jour le mot de passe
+        const passwordHash = hashPassword(newPassword);
+        
+        const { data, error } = await supabase
+            .from('users')
+            .update({ 
+                password_hash: passwordHash,
+                has_password: true
+            })
+            .eq('username', username)
+            .select()
+            .single();
+        
+        if (error) {
+            console.error('Erreur reset-password:', error);
+            return res.status(500).json({ error: 'Erreur lors de la réinitialisation du mot de passe' });
+        }
+        
+        console.log('✅ Mot de passe réinitialisé pour:', username);
+        res.json({ success: true, message: 'Mot de passe réinitialisé avec succès' });
+    } catch (error) {
+        console.error('Erreur reset-password:', error);
+        res.status(500).json({ error: 'Erreur lors de la réinitialisation du mot de passe' });
+    }
+});
+
 // ========== ROYAUMES ==========
 app.post('/api/kingdom', upload.fields([
     { name: 'logo', maxCount: 1 }, 

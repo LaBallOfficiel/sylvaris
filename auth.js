@@ -1,3 +1,16 @@
+function showLoader() {
+    document.getElementById('login-loader').classList.add('active');
+    document.getElementById('login-btn').disabled = true;
+    document.getElementById('reset-password-btn').disabled = true;
+    document.getElementById('error-message').style.display = 'none';
+}
+
+function hideLoader() {
+    document.getElementById('login-loader').classList.remove('active');
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('reset-password-btn').disabled = false;
+}
+
 async function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
@@ -17,6 +30,7 @@ async function login() {
         }
 
         try {
+            showLoader();
             const response = await fetch(`${CONFIG.API_URL}/check-user/${encodeURIComponent(username)}`);
             const data = await response.json();
 
@@ -24,6 +38,7 @@ async function login() {
                 if (data.hasPassword) {
                     loginStep = 'password';
                     document.getElementById('password-group').style.display = 'block';
+                    document.getElementById('forgot-password-link').style.display = 'block';
                     errorMsg.style.display = 'none';
                 } else {
                     loginStep = 'new-password';
@@ -40,6 +55,8 @@ async function login() {
         } catch (error) {
             console.error('Erreur:', error);
             showMessage('error-message', 'Erreur de connexion au serveur.');
+        } finally {
+            hideLoader();
         }
     } else if (loginStep === 'password') {
         if (!password) {
@@ -48,6 +65,7 @@ async function login() {
         }
 
         try {
+            showLoader();
             const response = await fetch(`${CONFIG.API_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -64,6 +82,8 @@ async function login() {
         } catch (error) {
             console.error('Erreur:', error);
             showMessage('error-message', 'Erreur de connexion au serveur.');
+        } finally {
+            hideLoader();
         }
     } else if (loginStep === 'new-password') {
         if (!newPassword || !confirmPassword) {
@@ -82,6 +102,7 @@ async function login() {
         }
 
         try {
+            showLoader();
             const response = await fetch(`${CONFIG.API_URL}/set-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,7 +119,98 @@ async function login() {
         } catch (error) {
             console.error('Erreur:', error);
             showMessage('error-message', 'Erreur de connexion au serveur.');
+        } finally {
+            hideLoader();
         }
+    }
+}
+
+function showForgotPassword() {
+    const username = document.getElementById('username').value.trim();
+    
+    if (!username) {
+        showMessage('error-message', 'Veuillez d\'abord entrer votre pseudo.');
+        return;
+    }
+    
+    // Cacher le formulaire de connexion
+    document.getElementById('password-group').style.display = 'none';
+    document.getElementById('forgot-password-link').style.display = 'none';
+    
+    // Afficher le formulaire de reset
+    document.getElementById('reset-password-group').style.display = 'block';
+    document.getElementById('reset-confirm-password-group').style.display = 'block';
+    document.getElementById('reset-password-btn').style.display = 'block';
+    document.getElementById('cancel-reset-btn').style.display = 'inline-block';
+    document.getElementById('login-btn').style.display = 'none';
+    
+    loginStep = 'reset-password';
+    document.getElementById('error-message').style.display = 'none';
+}
+
+function cancelReset() {
+    // Réafficher le formulaire de connexion
+    document.getElementById('reset-password-group').style.display = 'none';
+    document.getElementById('reset-confirm-password-group').style.display = 'none';
+    document.getElementById('reset-password-btn').style.display = 'none';
+    document.getElementById('cancel-reset-btn').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
+    
+    document.getElementById('password-group').style.display = 'block';
+    document.getElementById('forgot-password-link').style.display = 'block';
+    
+    loginStep = 'password';
+    document.getElementById('error-message').style.display = 'none';
+}
+
+async function resetPassword() {
+    const username = document.getElementById('username').value.trim();
+    const newPassword = document.getElementById('reset-password').value;
+    const confirmPassword = document.getElementById('reset-confirm-password').value;
+    
+    if (!newPassword || !confirmPassword) {
+        showMessage('error-message', 'Veuillez remplir tous les champs.');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessage('error-message', 'Le mot de passe doit contenir au moins 6 caractères.');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showMessage('error-message', 'Les mots de passe ne correspondent pas.');
+        return;
+    }
+    
+    try {
+        showLoader();
+        const response = await fetch(`${CONFIG.API_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, newPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('success-message-reset', 'Mot de passe réinitialisé avec succès! Vous pouvez maintenant vous connecter.', 'success');
+            
+            // Réinitialiser le formulaire après 2 secondes
+            setTimeout(() => {
+                document.getElementById('reset-password').value = '';
+                document.getElementById('reset-confirm-password').value = '';
+                cancelReset();
+                document.getElementById('success-message-reset').style.display = 'none';
+            }, 2000);
+        } else {
+            showMessage('error-message', data.error || 'Erreur lors de la réinitialisation du mot de passe.');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error-message', 'Erreur de connexion au serveur.');
+    } finally {
+        hideLoader();
     }
 }
 
@@ -129,8 +241,17 @@ function logout() {
     document.getElementById('password').value = '';
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-password').value = '';
+    document.getElementById('reset-password').value = '';
+    document.getElementById('reset-confirm-password').value = '';
     document.getElementById('password-group').style.display = 'none';
     document.getElementById('new-password-group').style.display = 'none';
     document.getElementById('confirm-password-group').style.display = 'none';
+    document.getElementById('reset-password-group').style.display = 'none';
+    document.getElementById('reset-confirm-password-group').style.display = 'none';
+    document.getElementById('forgot-password-link').style.display = 'none';
+    document.getElementById('reset-password-btn').style.display = 'none';
+    document.getElementById('cancel-reset-btn').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
     document.getElementById('error-message').style.display = 'none';
+    hideLoader();
 }
